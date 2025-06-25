@@ -1,0 +1,139 @@
+
+-----
+
+## \. Infrastructure as Code (IaC) with Ansible
+
+This section covers the basics of **Ansible**
+
+My setup for practice involves a **single WSL2 Ubuntu instance** acting as both the **Control Node** (where Ansible is installed and executed) and the **Managed Node** (the target server being configured).
+
+### 1. Ansible Setup & Basic Concepts
+
+  * **Installation (on Control Node - WSL2 Ubuntu):**
+    ```bash
+    pip3 install ansible --user
+    # Ensure ~/.local/bin is in PATH if 'ansible' command is not found
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+  * **Verification:**
+    ```bash
+    ansible --version
+    # Expected output: ansible [core X.Y.Z]
+    ```
+  * **Core Concepts:**
+      * **Control Node:** Machine running Ansible.
+      * **Managed Node(s):** Servers Ansible configures.
+      * **Agentless:** No software needed on Managed Nodes (uses SSH).
+      * **Idempotent:** Running tasks multiple times yields the same result.
+
+### 2. Inventory (`hosts`)
+
+The inventory file is Ansible's address book, listing Managed Nodes and connection details.
+
+  * **Location:** Typically `my_ansible_project/hosts`
+  * **Content for WSL2 (managing `localhost`):**
+    ```ini
+    # my_ansible_project/hosts
+
+    [my_wsl_servers]
+    localhost
+
+    [all:vars]
+    ansible_connection=local       # IMPORTANT: Manage locally, not via SSH
+    ansible_python_interpreter=/usr/bin/python3 # Python 3 path on WSL2
+    ansible_user=your_wsl_username # Your actual WSL username
+    ```
+
+### 3. Ad-hoc Commands
+
+Quick, one-off commands to perform simple tasks or connectivity checks.
+
+  * **Syntax:** `ansible <pattern> -i <inventory_file> -m <module_name> -a "<module_arguments>"`
+  * **Connectivity Test (`ping` module):**
+    ```bash
+    ansible all -i hosts -m ping
+    # Expected output: localhost | SUCCESS => {"changed": false, "ping": "pong"}
+    ```
+
+### 4. Playbooks
+
+Playbooks are YAML files defining ordered sets of tasks to execute on Managed Nodes. This is where automation instructions reside.
+
+  * **Syntax:** YAML format (indentation is crucial\!).
+
+  * **Key Sections:**
+
+      * `---`: YAML document start.
+      * `- name`: Play/Task description.
+      * `hosts`: Target hosts/groups.
+      * `become: yes`: Elevate privileges (like `sudo`).
+      * `tasks`: List of actions using modules.
+      * `handlers`: Tasks triggered by `notify:` (run once at end of play).
+
+  * **Execution:** `ansible-playbook -i <inventory_file> <playbook_file> -K` (`-K` asks for `sudo` password).
+
+  * **Example `nginx_install.yml` (Simplified):**
+
+    ```yaml
+    ---
+    - name: Deploy Nginx Web Server on WSL2
+      hosts: my_wsl_servers
+      become: yes
+
+      tasks:
+        - name: Update apt cache
+          apt: update_cache: yes
+
+        - name: Install Nginx package
+          apt: name: nginx state: present
+
+        - name: Create and copy default index.html
+          copy:
+            content: "<html><body><h1>Ansible deployed this!</h1></body></html>"
+            dest: /var/www/html/index.html
+            mode: '0644'
+          notify:
+            - restart nginx # Calls handler below if file changed
+
+        - name: Start and enable Nginx service
+          service: name: nginx state: started enabled: yes
+
+      handlers:
+        - name: restart nginx
+          service: name: nginx state: restarted
+    ```
+
+  * **Verification:** After running, check `curl http://localhost` in WSL2 terminal.
+
+### 5. Roles
+
+Roles are a structured way to organize Playbooks into reusable, modular units. They enforce a standard directory layout for tasks, handlers, variables, and more.
+
+  * **Purpose:** Reusability, organization, modularity, collaboration.
+  * **Creation:** `ansible-galaxy init roles/my_role_name`
+  * **Structure (key folders):**
+    ```
+    roles/
+    └── my_role_name/
+        ├── tasks/
+        │   └── main.yml      # Contains all tasks (no 'tasks:' keyword here!)
+        ├── handlers/
+        │   └── main.yml      # Contains all handlers (no 'handlers:' keyword here!)
+        ├── defaults/
+        ├── vars/
+        └── ...
+    ```
+  * **Playbook using a Role (simplified `nginx_install.yml`):**
+    ```yaml
+    ---
+    - name: Deploy Nginx Web Server on WSL2 (using a Role)
+      hosts: my_wsl_servers
+      become: yes
+
+      roles: # Call the role here
+        - nginx_webserver # Name of the role created in roles/
+    ```
+  * **How it works:** Ansible executes tasks from `roles/nginx_webserver/tasks/main.yml` and uses handlers from `roles/nginx_webserver/handlers/main.yml`.
+
+-----
