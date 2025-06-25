@@ -1,0 +1,128 @@
+
+-----
+
+## 8\. File I/O (Input/Output) & Exception Handling
+
+This section covers how Python interacts with files on your system and how to robustly handle errors, crucial for managing logs, configurations, and data in real-world scenarios.
+
+### 8.1. File Operations (`open`, `read`, `write`, `close`)
+
+  * **Opening Files**: Use `open(filename, mode)`.
+      * `"r"`: Read (default)
+      * `"w"`: Write (overwrites existing file)
+      * `"a"`: Append (adds to end of file)
+      * `"x"`: Exclusive creation (fails if file exists)
+      * `"b"`: Binary mode (e.g., `"rb"`, `"wb"`)
+  * **Writing to Files**: Use `file_object.write(string)`. Remember `\n` for newlines.
+  * **Reading from Files**:
+      * `file_object.read()`: Reads entire content as a single string.
+      * `file_object.readline()`: Reads one line at a time.
+      * `file_object.readlines()`: Reads all lines into a list of strings.
+  * **Closing Files**: Always `file_object.close()` to save changes and free resources.
+
+<!-- end list -->
+
+```python
+# --- Basic File Write & Read ---
+# Write to a file (overwrites if exists)
+file_w = open("my_doc.txt", "w", encoding="utf-8")
+file_w.write("Hello, Python File I/O!\n")
+file_w.write("This is the second line.\n")
+file_w.close()
+
+# Read from a file
+file_r = open("my_doc.txt", "r", encoding="utf-8")
+content = file_r.read()
+print("--- my_doc.txt Content ---")
+print(content)
+file_r.close()
+
+# Append to a file
+file_a = open("my_doc.txt", "a", encoding="utf-8")
+file_a.write("This line was appended.\n")
+file_a.close()
+```
+
+-----
+
+### 8.2. Safe File Handling with `with open(...)`
+
+The `with` statement ensures files are **automatically and safely closed**, even if errors occur. This is the **recommended** way to handle files.
+
+```python
+# --- Safe File Handling (Write) ---
+with open("safe_doc.txt", "w", encoding="utf-8") as f:
+    f.write("This is written using 'with'.\n")
+    f.write("It closes automatically.\n")
+print("safe_doc.txt written.")
+
+# --- Safe File Handling (Read line by line) ---
+print("\n--- safe_doc.txt Content (line by line) ---")
+with open("safe_doc.txt", "r", encoding="utf-8") as f:
+    for line in f: # Iterating over a file object reads line by line efficiently
+        print(line.strip()) # .strip() removes leading/trailing whitespace, including '\n'
+```
+
+-----
+
+### 8.3. Exception Handling (`try`, `except`, `else`, `finally`)
+
+Handle runtime errors gracefully to prevent program crashes.
+
+  * `try`: Code that might raise an error.
+  * `except ExceptionType`: Catches a specific type of error.
+  * `except Exception as e`: Catches any generic error and stores error info in `e`.
+  * `else`: Runs if no error occurs in `try` block.
+  * `finally`: Always runs, regardless of error or success.
+
+<!-- end list -->
+
+```python
+# --- File Not Found Error Handling ---
+try:
+    with open("non_existent.txt", "r") as f:
+        data = f.read()
+        print(data)
+except FileNotFoundError: # Specific error for file not found
+    print("Error: The file was not found!")
+except Exception as e: # Catch any other unexpected error
+    print(f"An unexpected error occurred: {e}")
+else: # If try block completed without error
+    print("File reading succeeded.")
+finally: # Always runs
+    print("File operation attempt finished.")
+
+# --- Value Error Handling (e.g., for int() conversion) ---
+def get_safe_integer_input():
+    while True: # Loop until valid input is received
+        try:
+            user_input = input("Enter a number: ")
+            number = int(user_input) # This might raise ValueError
+            return number # Return and exit if conversion successful
+        except ValueError: # Catch if input is not a valid integer
+            print("Invalid input. Please enter a valid number.")
+        except Exception as e: # Catch any other general error
+            print(f"An unexpected error occurred: {e}")
+
+# Example usage of the safe input function
+num1 = get_safe_integer_input()
+num2 = get_safe_integer_input()
+print(f"You entered: {num1} and {num2}")
+```
+
+-----
+
+### 8.4. Robust User Input (Tip for Korean Characters)
+
+Sometimes `input()` can have encoding issues with specific characters in certain terminal environments (like WSL). `sys.stdin.readline()` can be a more robust alternative.
+
+```python
+import sys
+
+# Example: Using sys.stdin.readline() for potentially problematic input
+# (Typically used if standard input() has encoding issues with complex characters)
+print("Enter a message (using sys.stdin.readline): ", end='')
+user_message = sys.stdin.readline().strip() # .strip() to remove trailing newline
+print(f"You entered: {user_message}")
+```
+-----
