@@ -1,0 +1,84 @@
+---
+
+## 10. AWS Cloud Foundations & Core Services
+
+This section documents my foundational understanding of Amazon Web Services (AWS), the world's leading cloud platform. Learning AWS is crucial for managing scalable infrastructure, ensuring robust security, and identifying vulnerabilities in cloud environments.
+
+### 10.1. Cloud Computing & AWS Overview
+
+* **Cloud Computing:** Renting computing resources (servers, storage, networking) over the internet, paying only for what you use. Eliminates upfront costs and scales easily.
+    * **IaaS (Infrastructure as a Service):** Renting basic building blocks (e.g., AWS EC2, S3, VPC).
+    * **PaaS (Platform as a Service):** Renting a ready-to-use development platform.
+    * **SaaS (Software as a Service):** Renting ready-to-use software (e.g., Gmail).
+* **AWS Free Tier:** Offers free usage limits for many services for a specified period/volume, ideal for learning and practice. Always `Terminate` (for EC2) or `Delete` unneeded resources to avoid charges.
+* **Root User vs. IAM User:**
+    * **Root User:** The main account created during AWS signup, has all permissions. **Should be used only for initial setup and critical account management.**
+    * **IAM User:** Best practice for daily operations; has specific permissions defined by policies.
+
+### 10.2. AWS Core Services Deep Dive
+
+#### 10.2.1. IAM (Identity and Access Management)
+
+* **Purpose:** The "gatekeeper" for AWS. Manages who (users), what (resources), and how (permissions) can access resources in your AWS account.
+* **Components:**
+    * **Users:** Individual people or applications.
+    * **Groups:** Collections of users for easier permission management.
+    * **Policies:** JSON documents defining permissions (Allow/Deny, Actions, Resources). Attached to users, groups, or roles.
+    * **Roles:** Temporary permissions for AWS services or cross-account access (no permanent credentials).
+* **Security Principle:** **Principle of Least Privilege:** Grant only the minimum necessary permissions.
+
+#### 10.2.2. VPC (Virtual Private Cloud) & Networking
+
+* **Purpose:** Your isolated, private virtual network within AWS. Like your "private house" in the AWS "apartment complex."
+* **Components:**
+    * **VPC:** The entire private IP address range (e.g., `10.0.0.0/16`).
+    * **Subnets:** Smaller divisions within a VPC, tied to an Availability Zone (AZ).
+        * **Public Subnet:** Can communicate directly with the internet via an Internet Gateway.
+        * **Private Subnet:** Isolated from direct internet access.
+    * **Internet Gateway (IGW):** The "door" to the internet for your VPC. Must be attached to a VPC.
+    * **Route Tables:** "Traffic maps" defining where network traffic goes. Associated with subnets.
+        * Public Route Table: Has a route to IGW (`0.0.0.0/0` -> IGW).
+        * Private Route Table: No direct route to IGW.
+    * **Security Groups (SG):** **Stateful**, instance-level firewalls. Allow/deny traffic to specific instances.
+    * **Network ACLs (NACL):** **Stateless**, subnet-level firewalls. More granular control than SGs, applied before SGs.
+
+#### 10.2.3. Compute Services (EC2, Lambda, Auto Scaling)
+
+* **EC2 (Elastic Compute Cloud):** Your "rented virtual computer" in the cloud.
+    * **Instance Types:** Hardware specifications (e.g., `t2.micro` for Free Tier).
+    * **AMI (Amazon Machine Image):** Pre-configured OS + software template (e.g., Ubuntu).
+    * **Key Pair:** Secure SSH login credentials (`.pem` file).
+    * **Security Groups:** Acts as a firewall for the EC2 instance.
+* **Lambda:** The "magic automatic coffee machine" or "serverless function." Runs your code only when triggered by an event, without managing servers. Pay only for execution time.
+* **Auto Scaling:** The "smart restaurant manager." Automatically adjusts the number of EC2 instances based on traffic or performance metrics, ensuring high availability and cost efficiency.
+
+#### 10.2.4. Storage Services (S3, EBS, EFS)
+
+* **S3 (Simple Storage Service):** The "infinite internet photo album" or "item storage warehouse."
+    * **Type:** Object Storage.
+    * **Units:** **Buckets** (containers) hold **Objects** (files).
+    * **Key Features:** Unlimited capacity, 11 9s durability, web access (HTTP/S).
+    * **Security:** **Block Public Access** is crucial to prevent public exposure. Versioning, logging, encryption.
+* **EBS (Elastic Block Store):** Your "EC2's dedicated external hard drive."
+    * **Type:** Block Storage.
+    * **Feature:** Attaches directly to **one** EC2 instance. Used for OS boot volumes and database storage.
+    * **Key Features:** Snapshots (point-in-time backups).
+* **EFS (Elastic File System):** The "office shared folder."
+    * **Type:** File Storage.
+    * **Feature:** Allows **multiple** EC2 instances to simultaneously access and share the same storage space via NFS.
+
+#### 10.2.5. Database Services (RDS, DynamoDB, Others)
+
+* **RDS (Relational Database Service):** The "expert-managed, organized spreadsheet/library database."
+    * **Type:** Managed Relational Database (SQL).
+    * **Engines:** MySQL, PostgreSQL, Oracle, SQL Server, Aurora.
+    * **Features:** Automated backups, patching, scaling (vertical, read replicas), High Availability (Multi-AZ).
+* **DynamoDB:** The "flexible sticky note/unlimited high-speed warehouse."
+    * **Type:** Fully managed NoSQL Database (Key-Value, Document).
+    * **Features:** Infinite scalability, consistent millisecond performance, flexible schema, serverless.
+* **Other Databases (briefly):**
+    * **Redshift:** "Big warehouse historical data analysis expert" (data warehousing).
+    * **ElastiCache:** "Super-fast temporary memo pad" (in-memory caching).
+    * **Neptune:** "Relationship map storage" (graph database).
+
+---
